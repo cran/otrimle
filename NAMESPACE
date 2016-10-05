@@ -1,0 +1,17 @@
+
+# Import all packages listed as Imports or Depends
+import("stats", "graphics", "grDevices", "mclust", "prabclus")
+
+exportPattern ("^[^\\.]")
+
+importFrom("mclust","hc")
+importFrom("prabclus","NNclean")
+
+S3method(plot,otrimle)
+S3method(plot,rimle)
+S3method(print,otrimle)
+S3method(print,rimle)
+
+export(InitClust)
+export(otrimle)
+export(rimle)
