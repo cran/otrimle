@@ -8,18 +8,6 @@
 .PlotOtrimleClustering <- function(data, cluster, margins = {
   1:ncol(data)
 }, sym.noise = "+", pictitle = "") {
-  if (is.vector(data)) {
-    data <- matrix(data, ncol = 1)
-  }
-  if (!is.matrix(data)) {
-    data <- data.matrix(data)
-  }
-  if (!is.numeric(data)) {
-    stop("\"data\" must be numeric.")
-  }
-  if (nrow(data) != length(cluster)) {
-    stop("nrow(data) is not equal to length(cluster)")
-  }
   .OtrimleCols()
   if (min(cluster) == 0) {
     pch <- c(0:9, letters, LETTERS)[cluster + 1]
@@ -156,7 +144,19 @@ plot.otrimle <- function(x, what = c("criterion", "iloglik", "fit", "clustering"
   }
   if (what == "clustering") {
     if (is.null(data)) {
-      stop("argument \"data\" (matrix or data.frame) is required for  what=\"clustering\"")
+      stop("argument \"data\" (vector, matrix or data.frame) is required for  what=\"clustering\"")
+    }
+    if (is.vector(data)) {
+      data <- matrix(data, ncol = 1)
+    }
+    if (!is.matrix(data)) {
+      data <- data.matrix(data)
+    }
+    if (!is.numeric(data)) {
+      stop("\"data\" must be numeric.")
+    }
+    if (nrow(data) != length(x$cluster)) {
+      stop("nrow(data) is not equal to length(cluster)")
     }
     if (is.null(margins)) {
       margins <- 1:ncol(data)
@@ -187,7 +187,19 @@ plot.rimle <- function(x, what = c("fit", "clustering"), data = NULL, margins = 
   }
   if (what == "clustering") {
     if (is.null(data)) {
-      stop("argument \"data\" (matrix or data.frame) is required for  what=\"clustering\"")
+      stop("argument \"data\" (vector, matrix or data.frame) is required for  what=\"clustering\"")
+    }
+    if (is.vector(data)) {
+      data <- matrix(data, ncol = 1)
+    }
+    if (!is.matrix(data)) {
+      data <- data.matrix(data)
+    }
+    if (!is.numeric(data)) {
+      stop("\"data\" must be numeric.")
+    }
+    if (nrow(data) != length(x$cluster)) {
+      stop("nrow(data) is not equal to length(cluster)")
     }
     if (is.null(margins)) {
       margins <- 1:ncol(data)

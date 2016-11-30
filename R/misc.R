@@ -46,7 +46,7 @@
       return(0)
     }
     else {
-      return(1)
+      return(length(unique(x)))
     }
   }
   else {
