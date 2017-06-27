@@ -71,3 +71,16 @@
     }
   }
 }
+.Cluster2Assign <- function(cluster) {
+  cl <- sort(unique(cluster[cluster != 0]))
+  G <- length(cl)
+  N <- length(cluster)
+  A <- matrix(0, nrow = N, ncol = 1 + G)
+  if (sum(cluster == 0) > 0) {
+    A[cluster == 0, 1] <- 1
+  }
+  for (j in 1:G) {
+    A[cluster == cl[j], j + 1] <- 1
+  }
+  return(A)
+}

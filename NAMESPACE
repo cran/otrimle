@@ -1,11 +1,15 @@
 
 # Import all packages listed as Imports or Depends
-import("stats", "graphics", "grDevices", "mclust", "prabclus")
+import("stats", "graphics", "grDevices", "mclust", "parallel", "foreach", "doParallel")
 
 exportPattern ("^[^\\.]")
 
-importFrom("mclust","hc")
-importFrom("prabclus","NNclean")
+importFrom("utils", "citHeader")
+importFrom("mclust", "hc")
+importFrom("foreach", "foreach")
+importFrom("doParallel", "registerDoParallel")
+importFrom("parallel", "detectCores")
+
 
 S3method(plot,otrimle)
 S3method(plot,rimle)

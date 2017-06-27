@@ -3,12 +3,12 @@
     "#F5BD2F", "#566473", "#DC143C", "#915C83", "#CDBFAC", "#87A96B", "#6E7F80", 
     "#00B1C4", "#FFE135", "#BCD4E6", "#DE5D83", "#CC0000", "#006B3C", "#92A1CF", 
     "#2A52BE", "#8C92AC", "#FFBCD9", "#E52B50")
-  palette(Cols)
+  return(Cols)
 }
 .PlotOtrimleClustering <- function(data, cluster, margins = {
   1:ncol(data)
 }, sym.noise = "+", pictitle = "") {
-  .OtrimleCols()
+  palette(.OtrimleCols())
   if (min(cluster) == 0) {
     pch <- c(0:9, letters, LETTERS)[cluster + 1]
   }
@@ -39,7 +39,7 @@
   }
 }
 .PlotOtrimleFit <- function(x, cluster = NULL) {
-  .OtrimleCols()
+  palette(.OtrimleCols())
   G <- dim(x$cov)[3]
   P <- dim(x$cov)[2]
   if (!{
@@ -80,7 +80,7 @@
   }
 }
 .PlotOtrimleOptimization <- function(x) {
-  .OtrimleCols()
+  palette(.OtrimleCols())
   ok <- !is.na(x$optimization[, 2])
   X <- x$optimization[ok, 1]
   Y <- x$optimization[ok, 2]
@@ -106,7 +106,7 @@
   }
 }
 .PlotOtrimleIloglik <- function(x) {
-  .OtrimleCols()
+  palette(.OtrimleCols())
   ok <- !is.na(x$optimization[, 2])
   X <- x$optimization[ok, 1]
   Y <- x$optimization[ok, 3]

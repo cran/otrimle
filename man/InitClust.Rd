@@ -2,18 +2,17 @@
 
 \alias{InitClust}
 
-\title{Robust Initilization for Model-based Clustering Methods}
+\title{Robust Initialization for Model-based Clustering Methods}
 
 \description{
   Computes the initial cluster assignment based on a combination of
-  nearest neighbor based clutter/noise detection,
-  and agglomerative hierarchical clustering based on maximum likelihood
-  criteria for Gaussian mixture models.
+  nearest neighbor based noise detection, and agglomerative hierarchical
+  clustering based on maximum likelihood criteria for Gaussian
+  mixture models.
 }
 
 \usage{
- InitClust(data, G, cpr.min={ncol(data)+1}/nrow(data),
-           K=5, nstart.km=50, modelName="VVV", monitor=FALSE)
+ InitClust(data , G , k = 3 , knnd.trim = 0.5 , modelName='VVV')
  }
 
  \arguments{
@@ -25,15 +24,13 @@
    \item{G}{
      An integer specifying the number of clusters.
    }
-   \item{cpr.min}{
-     The minimum cluster proportion allowed in the initial clustering.
-   }
-   \item{K}{
+   \item{k}{
      An integer specifying the number of considered nearest neighbors per point
      used for the denoising step (see \emph{Details}).
    }
-   \item{nstart.km}{
-     An integer specifying the number of  random starts  for the k-means step.
+   \item{knnd.trim}{
+     A number in (0,1) which defines the proportion of points
+     initialized as noise. Tipically \code{knnd.trim<=0.5} (see \emph{Details}).
    }
    \item{modelName}{
      A character string indicating the covariance model to be used. Possible models are: \cr
@@ -45,63 +42,36 @@
      \code{"VVV"}: ellipsoidal, varying volume, shape, and orientation (default).\cr
      See \emph{Details}.
    }
-   \item{monitor}{
-     A logical value; \code{TRUE} means that tracing messages
-     will be produced.
-   }
-
  }
 
 
+
+
  \details{
-   The initialization is described in the supplementary material of
-   Coretto and Hennig (2015). Noise/outliers are removed based on nearest neighbor based clutter/noise
-   detection  (NNC) of Byers and Raftery (1998). This step is performed
-   with  \code{\link[prabclus]{NNclean}}. The input argument \code{K}
-   is passed as \code{k} to
-   \code{\link[prabclus]{NNclean}}. Based on
-   this step a denoised version of \code{data} is obtained. The initial
-   clustering is then obtained based on the following steps. Note
-   that these steps are reported in the \code{code} element of the output
-   list (see \emph{Value}).\cr
+   The initialization is discussed  in details in Coretto and Hennig (2016). Two
+   steps are performed:\cr
 
-   Clustering steps:\cr
+   \emph{Denoising step:} for each data point compute its
+   \code{k}th\code{-}nearest neighbors
+   distance (\code{k-}NND). All points with \code{k-}NND  larger
+   than the (1-\code{knnd.trim})\code{-}quantile  of the \code{k-}NND
+   are initialized as noise. Intepretaion of
+   \code{k} is that:  \code{(k-1)}, but not \code{k}, points close
+   together may still be interpreted  as noise or outliers
 
-   \emph{Step 1}: perform the model-based hierarchical clustering (MBHC)
+   \emph{Clustering step:} perform the model-based hierarchical clustering (MBHC)
    proposed in Fraley (1998). This step is performed using
    \code{\link[mclust]{hc}}. The input argument \code{modelName} is passed
    to \code{\link[mclust]{hc}}. See \emph{Details} of
    \code{\link[mclust]{hc}} for more details.
 
-   \emph{Step 2}: if too small clusters (cluster proportions
-   \code{<cpr.min}) are found in the previous step,  assign small clusters
-   to noise and perform MBHC again on the denoised data.
 
-   \emph{Step 3}: if too small clusters are found in the previous step,
-   assign small clusters to noise and perform k-means on the denoised data.
-
-   \emph{Step 4}: if too small clusters are found in the previous step, then a
-   completely random partition that satisfies  \code{cpr.min} is returned.
  }
 
 
- \value{
-   A \code{list} with the following components:
-
-   \item{code}{
-     An integer indicating the step at which the initial clustering has been
-     found (see \emph{Details}).
-   }
-   \item{cluster}{
-     A vector of integers  denoting cluster assignments for each
-     observation. \code{cluster=0} for observations assigned to  noise/outliers.
-   }
+ \value{An integer vector specifying the initial cluster
+    assignment  with \code{0} denoting noise/outliers.
  }
-
-
-
-
-
 
 
  \section{References}{
@@ -109,21 +79,14 @@
    Algorithms for model-based Gaussian hierarchical clustering.
    \emph{SIAM Journal on Scientific Computing} 20:270-281.
 
-   Byers, S. and A. E. Raftery  (1998).
-   Nearest-Neighbor Clutter Removal for Estimating Features in Spatial
-   Point Processes,
-   \emph{Journal of the American Statistical Association}, 93, 577-584.
-
-   Coretto, P.  and C. Hennig (2015).
-   Robust improper maximum likelihood: tuning, computation, and a comparison with other methods for robust Gaussian clustering.
-   To appear on the \emph{Journal of the American Statistical Association}.
-   arXiv preprint at \href{http://arxiv.org/abs/1406.0808}{arXiv:1406.0808}
-   with (\href{http://arxiv.org/src/1406.0808v4/anc/supplement.pdf}{supplement}).
+   Coretto, P.  and C. Hennig (2017).
+   Consistency, breakdown robustness, and algorithms for robust improper maximum
+   likelihood clustering. arXiv preprint available at
+   \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
  }
 
 
  \seealso{
-   \link[prabclus]{NNclean},
    \link[mclust]{hc}
  }
 
@@ -134,11 +97,12 @@
  x <- banknote[,-1]
 
  ## Initial clusters with default arguments
- init1 <- InitClust(data=x, G=2)
- print(init1)
+ init <- InitClust(data = x, G = 2)
+ print(init)
 
  ## Perform otrimle
- a <- otrimle(data=x, initial=init1$cluster)
+ a <- otrimle(data = x, G = 2, initial = init,
+              logicd = c(-Inf, -50, -10), ncores = 1)
  plot(a, what="clustering", data=x)
  }
 

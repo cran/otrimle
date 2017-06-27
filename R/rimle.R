@@ -1,6 +1,5 @@
 rimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50, 
-  det.min = .Machine$double.eps, cmstep = TRUE, em.iter.max = 500, em.tol = 1e-06, 
-  monitor = 1) {
+  iter.max = 500, tol = 1e-06) {
   if (is.vector(data)) {
     data <- matrix(data, ncol = 1)
   }
@@ -17,10 +16,19 @@ rimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 5
   }) {
     stop("\"initial\" must be an integer vector of length equal to nrow(data).")
   }
+  G <- as.integer(G)
+  if (G < 1) {
+    stop("G must be an integer greater or equal to one.")
+  }
+  if (!is.null(initial)) {
+    if (G != max(initial)) {
+      stop("G is not equal to max(initial).")
+    }
+  }
   if (!is.null(logicd) & {
     !is.numeric(logicd) | length(logicd) != 1
   }) {
-    stop("\"logicd\" must be numeric, with length(logicd)=1.")
+    stop("\"logicd\" must be numeric of length=1.")
   }
   if (npr.max <= 0 | npr.max >= 1) {
     stop("\"npr.max\" must belog to the interval (0,1). Tipically npr.max<=0.5.")
@@ -28,105 +36,63 @@ rimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 5
   if (erc < 1) {
     stop("\"ecr\" must be larger or equal to 1.")
   }
-  if (det.min <= 0) {
-    stop("\"det.min\" must be positive.")
+  if (iter.max < 2) {
+    stop("\"iter.max\" must be an integer larger or equal to 2.")
   }
-  if (em.iter.max < 1) {
-    stop("\"em.iter.max\" must be larger or equal to 1.")
-  }
-  if (em.tol < 0) {
-    stop("\"em.tol\" must be positive.")
-  }
-  if (monitor > 0) {
-    message("\nRIMLE:")
-  }
-  if (cmstep) {
-    doEM <- .EMb
-  }
-  else {
-    doEM <- .EMa
+  if (tol < 0) {
+    stop("\"tol\" must be positive.")
   }
   if (is.null(initial)) {
-    if (monitor >= 1) {
-      message(".......: computing initial clusters")
-    }
-    initial <- .Cluster2Assign(InitClust(data = data, G = G)$cluster)
+    initial <- .Cluster2Assign(InitClust(data = data, G = G, knnd.trim = npr.max))
   }
   else {
     initial <- .Cluster2Assign(initial)
-    G <- ncol(initial) - 1
-    nj <- rep(0, times = G)
-    for (j in 1:G) {
-      nj[j] <- .CountUniqueRows(data[initial[, 1 + j] == 1, ])
-    }
-    if (any(nj < 2)) {
-      stop("some of the initial clusters contain less then 2 distinct points. Initial parameters cannot be computed.")
-    }
+  }
+  G <- ncol(initial) - 1
+  nj <- rep(0, times = G)
+  for (j in 1:G) {
+    nj[j] <- .CountUniqueRows(data[initial[, 1 + j] == 1, ])
+  }
+  if (any(nj < 2)) {
+    Suggest <- paste("initial = sample(0:", G, ",  size=", nrow(data), ", replace=TRUE)", 
+      sep = "")
+    StopMsg <- paste("\n\nSome of the initial clusters contain less then 2 distinct points. Initial parameters cannot be computed. Try a random initial partition setting: \n\n", 
+      Suggest, sep = "")
+    stop(StopMsg)
   }
   if (is.null(logicd)) {
     N <- nrow(data)
     P <- ncol(data)
     G <- ncol(initial) - 1
-    cH <- -{
-      P * log(2 * pi) + qchisq(0.5, df = P)
-    }/2
-    cL <- max(-{
-      P * log(2 * pi) + qchisq({
-        1 - 0.1
-      }^{
-        1/N
-      }, df = P)
-    }/2, log(.Machine$double.xmin))
-    L <- matrix(0, nrow = P, ncol = G)
+    eps <- sqrt(.Machine$double.eps)
+    gausscost <- P * log(2 * pi)
+    qc <- qchisq({
+      1 - 0.05
+    }^{
+      1/N
+    }, df = P)
+    logicds <- rep(0, G)
     for (j in 1:G) {
       idx <- initial[, 1 + j] == 1
-      L[, j] <- eigen(cov(as.matrix(data[idx, ])), symmetric = TRUE, only.values = TRUE)$values
+      u <- eigen(cov(as.matrix(data[idx, ])), symmetric = TRUE, only.values = TRUE)$values
+      if ({
+        prod(abs(u)) < .Machine$double.xmin
+      } | any(u <= 0) | any(!is.finite(u))) {
+        Lmax <- max(u)
+        Lmin <- min(u)
+        u[u < Lmax/eps] <- Lmax/eps
+      }
+      logicds[j] <- -{
+        gausscost + sum(log(u)) + qc
+      }/2
+      if (!is.finite(logicds[j])) {
+        logicds[j] <- log(.Machine$double.xmin)
+      }
     }
-    if (any(L <= 0) & erc == Inf) {
-      L <- .GssERC(values = L, erc = 1e+12, Lmin = min(L), Lmax = max(L), sumtau = nj, 
-        P = P, G = G)
-    }
-    else if (any(L <= 0) & erc < Inf) {
-      L <- .GssERC(values = L, erc = erc, Lmin = min(L), Lmax = max(L), sumtau = nj, 
-        P = P, G = G)
-    }
-    logdetj <- apply(log(L), 2, sum)
-    a <- min(c(cL - logdetj/2, cH - logdetj/2))
-    b <- max(c(cL - logdetj/2, cH - logdetj/2))
-    logicd <- {
-      a + b
-    }/2
+    logicd <- min(logicds)
   }
-  if (monitor >= 1) {
-    message(".......: computing solution")
-  }
-  ans <- doEM(data = data, initial = initial, logicd = logicd, npr.max = npr.max, 
-    erc = erc, det.min = det.min, beta = 0, em.iter.max = em.iter.max, em.tol = em.tol, 
-    opt.selector = FALSE, gss.operation = FALSE)
+  ans <- .ECM(data = data, initial = initial, logicd = logicd, npr.max = npr.max, 
+    erc = erc, iter.max = iter.max, tol = tol, grid.operation = FALSE)
   class(ans) <- "rimle"
   return(ans)
-}
-print.rimle <- function(x, ...) {
-  if (x$code > 0) {
-    G <- ncol(x$mean)
-    if (x$size[1] > 0) {
-      cat("\nRIMLE with fixed logicd=", round(x$logicd, 6), " discovered G=", 
-        G, " clusters plus noise of size:", "\n\n", sep = "")
-      print(x$size)
-      cat("\nAvailable components:\n")
-      print(names(x))
-    }
-    else {
-      cat("\nRIMLE with fixed logicd=", round(x$logicd, 6), " discovered G=", 
-        G, " clusters (without noise) of size:", "\n\n", sep = "")
-      print(x$size[-1])
-      cat("\nAvailable components:\n")
-      print(names(x))
-    }
-  }
-  else {
-    cat("\nRIMLE with fixed logicd=", round(x$logicd, 6), " could not find a solution based on the current settings. Please check flags below, and adjust settings as suggested in \"Details\" of help(\"rimle\").", 
-      sep = "")
-    cat(paste("\n\nFlags: ", x$flag, sep = ""))
-  }
 }

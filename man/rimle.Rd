@@ -19,9 +19,7 @@
 
 
 \usage{
-rimle(data, G, initial=NULL, logicd=NULL,
-      npr.max=0.5, erc=50, det.min=.Machine$double.eps, cmstep=TRUE,
-      em.iter.max=500, em.tol=1e-6, monitor=1)
+rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=50, iter.max=500, tol=1e-6)
 }
 
 
@@ -35,7 +33,7 @@ rimle(data, G, initial=NULL, logicd=NULL,
     An integer specifying the number of clusters.
   }
   \item{initial}{An integer vector specifying the initial cluster
-    assignment  with \code{0=noise/outliers}. If \code{NULL} (default),
+    assignment  with \code{0} denoting noise/outliers. If \code{NULL} (default)
     initialization is performed using \code{\link{InitClust}}.
   }
   \item{logicd}{
@@ -60,61 +58,25 @@ rimle(data, G, initial=NULL, logicd=NULL,
     \code{data} (see \code{\link[base]{scale}}) whenever measurement units
     of the different variables are grossly incompatible.
   }
-  \item{det.min}{
-    Lower bound for the minimum determinant of covariance matrices. This
-    is only active if \code{cmstep=FALSE} (see \emph{Details}).
-  }
-  \item{cmstep}{
-    A logical value. When set to \code{TRUE} the \emph{eigenratio constraint} is
-    enforced at each M-step of the underlying EM-algorithm (see
-    \emph{Details}).
-  }
-  \item{em.iter.max}{
+  \item{iter.max}{
     An integer value specifying the maximum number of iterations allowed
-    in the underlying EM-algorithm.
+    in the  ECM-algorithm (see Details).
   }
-  \item{em.tol}{
-    Stopping criterion for the the underlying EM-algorithm. An EM iteration
+  \item{tol}{
+    Stopping criterion for the underlying ECM-algorithm. An ECM iteration
     stops if two successive improper log-likelihood values are within
-    \code{em.tol}.
-  }
-  \item{monitor}{Set the verbosity level of tracing messages.  Possible values
-    are \code{monitor=0} (no messages), \code{monitor=1} and
-    \code{monitor=2} for increased verbosity.
+    \code{tol}.
   }
 }
 
 
 \details{
-  The \code{rimle} function allows to approximate the RIMLE solution
-  with two  different versions of the underlying EM-type algorithm.
-
-  \describe{
-    \item{\emph{ECM-algorithm}: \code{cmstep=TRUE}}{
-      The RIMLE solution is obtained based on the \emph{ECM-algorithm}
-      proposed in Coretto and Hennig (2016). In this case both the
-      \emph{eigenratio constraint} and the \emph{noise proportion
-      constraint} are enforced in each conditional M-step of the
-      algorithm.
-    }
-
-    \item{\emph{Approximate EM-algorithm}: \code{cmstep=FALSE}}{
-      This corresponds to the algorithm proposed in Coretto and Hennig
-      (2015).  In this case covariance matrices are regularized in each
-      step based on \code{det.min}, and the \emph{eigenratio constraint}
-      is applied only at the end of the EM iteration.}
-  }
-
-  The \emph{ECM-algorithm} is the default choice. The \emph{Approximate
-  EM-algorithm} is often slower than the \emph{ECM-algorithm} by a
-  factor of two. Furthermore the \emph{Approximate EM-algorithm} is
-  more prone to lead to problems indicated by \code{code=0} (see
-  \emph{Value}-section below) because of numerical degeneracies
-  connected to a low value of \code{min.det}. \cr
+  The \code{rimle} function computes the RIMLE solution using the
+  ECM-algorithm proposed in Coretto and Hennig (2017).
 
   There may be datasets for which the function does not provide a
   solution based on default arguments. This corresponds to
-  \code{code=0} and \code{flag=1} or 2 or 3 in the output (see
+  \code{code=0} and \code{flag=1} or \code{flag=2}  in the output (see
   \emph{Value}-section below).  This usually happens when some (or all) of the
   following circumstances occur: (i) \code{log(icd)} is too
   large; (ii) \code{erc} is too large; (iii) npr.max is too large;
@@ -123,6 +85,11 @@ rimle(data, G, initial=NULL, logicd=NULL,
   \code{\link{otrimle}} function. The \emph{Details} section of
   \code{\link{otrimle}} suggests several actions to take
   whenever a \code{code=0} non-solution occurs.
+
+  An earlier approximate version of the algorithm was originally
+  proposed in Coretto and Hennig (2016). Software for the original
+  version of the algorithm can be found in the supplementary materials
+  of  Coretto and Hennig (2016).
 }
 
 
@@ -204,16 +171,16 @@ rimle(data, G, initial=NULL, logicd=NULL,
 
 
 \section{References}{
-  Coretto, P.  and C. Hennig (2015).
-  Robust improper maximum likelihood: tuning, computation, and a comparison with other methods for robust Gaussian clustering.
-  To appear on the \emph{Journal of the American Statistical Association}.
-  arXiv preprint at \href{http://arxiv.org/abs/1406.0808}{arXiv:1406.0808}
-  with (\href{http://arxiv.org/src/1406.0808v4/anc/supplement.pdf}{supplement}).
-
-
   Coretto, P.  and C. Hennig (2016).
-  Consistency, breakdown robustness, and algorithms for robust improper maximum likelihood clustering.
-  arXiv preprint at \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
+  Robust improper maximum likelihood: tuning, computation, and a comparison with
+  other methods for robust Gaussian clustering.
+  \emph{Journal of the American Statistical Association}, Vol. 111(516), pp. 1648-1659.
+  \href{http://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
+
+  Coretto, P.  and C. Hennig (2017).
+  Consistency, breakdown robustness, and algorithms for robust improper maximum
+  likelihood clustering.
+  arXiv preprint available at \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
 }
 
 
@@ -244,16 +211,16 @@ x <- banknote[,-1]
 ## Perform RIMLE with default inputs
 ## -----------------------------------------------------------------------------
 set.seed(1)
-a <- rimle(data=x, G=2)
+a <- rimle(data = x, G = 2)
 print(a)
 
 ## Plot clustering
-plot(a, data=x, what="clustering")
+plot(a, data = x, what = "clustering")
 
 ## P-P plot of the clusterwise empirical weighted squared Mahalanobis
 ## distances against the target distribution pchisq(, df=ncol(data))
-plot(a, what="fit")
-plot(a, what="fit", cluster=1)
+plot(a, what = "fit")
+plot(a, what = "fit", cluster = 1)
 
 
 
@@ -264,22 +231,22 @@ plot(a, what="fit", cluster=1)
 set.seed(1)
 
 ## Case 1: noiseless solution, that is fit a pure Gaussian Mixture Model
-b1 <- rimle(data=x, G=2, logicd=-Inf)
+b1 <- rimle(data = x, G = 2, logicd = -Inf)
 plot(b1, data=x, what="clustering")
 plot(b1, what="fit")
 
 ## Case 2: low noise level
-b2 <- rimle(data=x, G=2, logicd=-100)
+b2 <- rimle(data = x, G = 2, logicd = -100)
 plot(b2, data=x, what="clustering")
 plot(b2, what="fit")
 
 ## Case 3: medium noise level
-b3 <- rimle(data=x, G=2, logicd=-10)
+b3 <- rimle(data = x, G = 2, logicd = -10)
 plot(b3, data=x, what="clustering")
 plot(b3, what="fit")
 
 ## Case 3: large noise level
-b3 <- rimle(data=x, G=2, logicd=5)
+b3 <- rimle(data = x, G = 2, logicd = 5)
 plot(b3, data=x, what="clustering")
 plot(b3, what="fit")
 

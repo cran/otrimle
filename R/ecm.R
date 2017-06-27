@@ -1,5 +1,4 @@
-.EMb <- function(data, initial, logicd, npr.max, erc, det.min, beta, em.iter.max, 
-  em.tol, opt.selector, gss.operation) {
+.ECM <- function(data, initial, logicd, npr.max, erc, iter.max, tol, grid.operation) {
   N <- dim(data)[1L]
   P <- dim(data)[2L]
   G <- dim(initial)[2L] - 1
@@ -9,15 +8,13 @@
   gausscost <- {
     2 * pi
   }^{
-    -0.5 * P
+    -P/2
   }
-  UB1 <- 1.01 + beta * npr.max
-  UB2 <- 2.02 + beta * npr.max
   STOP <- em.failed <- FALSE
   criterion <- 0
-  flag <- rep(FALSE, times = 5)
+  flag <- rep(FALSE, times = 4)
   iter <- 0L
-  iloglik.old <- iloglik.new <- --.Machine$double.xmax
+  iloglik.old <- iloglik.new <- -.Machine$double.xmax
   kd <- rep(0, G)
   pr <- sumtau.new <- rep(0, times = {
     1 + G
@@ -33,8 +30,8 @@
   L <- M <- matrix(0, nrow = P, ncol = G, byrow = TRUE, dimnames = NULL)
   V <- array(0, dim = c(P, P, G), dimnames = NULL)
   E <- list(values = L[, 1], vectors = V[, , 1])
-  if (gss.operation) {
-    ans <- list(logicd = logicd, criterion = UB2, iloglik = iloglik.old, code = 3, 
+  if (grid.operation) {
+    ans <- list(logicd = logicd, criterion = NA, iloglik = NA, npr = NA, code = 0L, 
       flag = NA)
   }
   else {
@@ -59,7 +56,7 @@
     if ({
       EigenRatio > erc
     } | !is.finite(EigenRatio) | any(L <= 0) | any(!is.finite(L))) {
-      flag[5] <- TRUE
+      flag[4] <- TRUE
       L <- .GssERC(values = L, erc = erc, Lmin = Lmin, Lmax = Lmax, sumtau = sumtau.old[-1], 
         P = P, G = G)
     }
@@ -139,7 +136,7 @@
         em.failed <- TRUE
       }
       else {
-        flag[4] <- TRUE
+        flag[3] <- TRUE
         for (j in 1:G) {
           phi[, 1 + j] <- phi[, 1 + j]/pr[1 + j]
         }
@@ -186,11 +183,11 @@
       iloglik.new <- sum(log(psi))
       delta.iloglik <- abs(iloglik.new - iloglik.old)
       if (is.finite(delta.iloglik) & {
-        delta.iloglik < em.tol
+        delta.iloglik < tol
       }) {
         STOP <- TRUE
       }
-      if (iter >= em.iter.max) {
+      if (iter >= iter.max) {
         STOP <- TRUE
       }
       iloglik.old <- iloglik.new
@@ -198,19 +195,17 @@
       sumtau.old <- sumtau.new
     }
   }
-  if (!any(flag[c(1, 2, 3)])) {
+  if (all(!flag[1:2])) {
     for (j in 1:G) {
       kd[j] <- max(abs(.wecdf(x = smd[, j], weights = tau.old[, 1 + j]) - pchisq(smd[, 
         j], df = P)))
     }
-    criterion <- (sum(kd * pr[-1])/sum(pr[-1])) + {
-      beta * pr[1]
-    }
+    criterion <- (sum(kd * pr[-1])/sum(pr[-1]))
   }
-  if (any(flag[c(1, 2, 3)])) {
+  if (any(flag[c(1, 2)])) {
     ans$code <- 0
   }
-  else if (iter == em.iter.max) {
+  else if (iter == iter.max) {
     ans$code <- 1
   }
   else {
@@ -222,57 +217,50 @@
   else {
     ans$flag <- "None"
   }
-  if (gss.operation) {
+  if (grid.operation) {
     if (ans$code == 0) {
-      ans$criterion <- UB2
+      ans$criterion <- NA
       ans$iloglik <- NA
     }
-    else if (opt.selector & {
-      flag[4] | flag[5]
-    }) {
-      ans$criterion <- criterion + UB1
-      ans$iloglik <- iloglik.old
-    }
-    else if (opt.selector & !flag[4] & !flag[5]) {
+    else {
       ans$criterion <- criterion
       ans$iloglik <- iloglik.old
-    }
-    else if (!opt.selector) {
-      ans$criterion <- criterion
-      ans$iloglik <- iloglik.old
+      ans$npr <- pr[1]
     }
   }
-  else if (ans$code > 0) {
-    ans$iter <- iter
-    ans$logicd <- logicd
-    ans$iloglik <- iloglik.old
-    ans$criterion <- criterion
-    ans$npr <- pr[1]
-    ans$cpr <- pr[-1]
-    ans$mean <- M
-    ans$cov <- V
-    ans$tau <- tau.old
-    ans$smd <- smd
-    ans$cluster <- apply(tau.old, 1, .rwhich.max) - 1
-    ans$size <- rep(0, 1 + G)
-    ans$size[1] <- sum(ans$cluster == 0)
-    for (j in 1:G) {
-      ans$cov[, , j] <- V[, , j] %*% {
-        L[, j] * t(V[, , j])
+  if (!grid.operation) {
+    if (ans$code > 0) {
+      ans$iter <- iter
+      ans$logicd <- logicd
+      ans$iloglik <- iloglik.old
+      ans$criterion <- criterion
+      ans$npr <- pr[1]
+      ans$cpr <- pr[-1]
+      ans$mean <- M
+      ans$cov <- V
+      ans$tau <- tau.old
+      ans$smd <- smd
+      ans$cluster <- apply(tau.old, 1, .rwhich.max) - 1
+      ans$size <- rep(0, 1 + G)
+      ans$size[1] <- sum(ans$cluster == 0)
+      for (j in 1:G) {
+        ans$cov[, , j] <- V[, , j] %*% {
+          L[, j] * t(V[, , j])
+        }
+        ans$size[1 + j] <- sum(ans$cluster == j)
       }
-      ans$size[1 + j] <- sum(ans$cluster == j)
+      VarNames <- colnames(data)
+      ClustName <- paste("Cluster.", 1:G, sep = "")
+      names(ans$cpr) <- colnames(ans$smd) <- colnames(ans$mean) <- ClustName
+      dimnames(ans$cov)[[3]] <- as.list(ClustName)
+      names(ans$size) <- colnames(ans$tau) <- c("Noise", ClustName)
+      if (!is.null(VarNames)) {
+        rownames(ans$mean) <- dimnames(ans$cov)[[1]] <- dimnames(ans$cov)[[2]] <- VarNames
+      }
     }
-    VarNames <- colnames(data)
-    ClustName <- paste("Cluster.", 1:G, sep = "")
-    names(ans$cpr) <- colnames(ans$smd) <- colnames(ans$mean) <- ClustName
-    dimnames(ans$cov)[[3]] <- as.list(ClustName)
-    names(ans$size) <- colnames(ans$tau) <- c("Noise", ClustName)
-    if (!is.null(VarNames)) {
-      rownames(ans$mean) <- dimnames(ans$cov)[[1]] <- dimnames(ans$cov)[[2]] <- VarNames
+    else {
+      ans$iter <- iter
     }
-  }
-  else if (ans$code == 0) {
-    ans$iter <- iter
   }
   return(ans)
 }

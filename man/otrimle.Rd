@@ -14,10 +14,8 @@
 
 
 \usage{
-otrimle(data, G, initial=NULL, logicd=NULL,
-        npr.max=0.5, erc=50, det.min=.Machine$double.eps, beta=0,
-        opt.selector=FALSE, cmstep=TRUE,
-        iter.max=100, tol=1e-4, em.iter.max=500, em.tol=1e-6, monitor=1)
+otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
+        iter.max = 500, tol = 1e-06, ncores = NULL, monitor = TRUE)
 }
 
 
@@ -35,13 +33,11 @@ otrimle(data, G, initial=NULL, logicd=NULL,
     initialization is performed using \code{\link{InitClust}}.
   }
   \item{logicd}{
-    A vector \code{c(log(icd.min), log(icd.max))}, where \code{icd.min}
-    and \code{icd.max}  are the lower and the upper bound of the improper
-    constant density (icd) with \code{.Machine$double.xmin <= icd.min <
-      icd.max < Inf}.
-    If \code{logicd=NULL} (default) the bounds are
-    computed based on the data. A pure Gaussian Mixture Model fit
-    (obtained when \code{log(icd)=-Inf}) is always included in the search path.
+    A vector defining a grid of \emph{log(icd)} values, where \emph{icd}
+    denotes the  improper constant density. If \code{logicd=NULL}
+    a default grid is considered. A pure Gaussian Mixture Model fit
+    (obtained when \code{log(icd)=-Inf}) is  included in the default
+    search path.
   }
   \item{npr.max}{
     A number in \code{(0,1)} specifying the maximum proportion of
@@ -58,89 +54,48 @@ otrimle(data, G, initial=NULL, logicd=NULL,
     \code{data} (see \code{\link[base]{scale}}) whenever measurement units
     of the different variables are grossly incompatible.
   }
-\item{det.min}{
-  Lower bound for the minimum determinant of covariance matrices. This
-  is only active if \code{cmstep=FALSE} (see \emph{Details}).
-}
-\item{beta}{
-  A number \code{>=0} that specifies the penalty parameter for the noise
-  level. When \code{beta=0} (default) the penalty term is inactive.
-}
-\item{opt.selector}{
-  A logical value. When set to \code{TRUE} solutions on the
-  border of the parameter space are only explored if an interior
-  solution is not available (see \emph{Details}).
-}
-\item{cmstep}{
-  A logical value. When set to \code{TRUE} the \emph{eigenratio constraint} is
-  enforced at each M-step of the underlying EM-algorithm (see
-  \emph{Details}).
-}
-\item{iter.max}{
-  An integer value specifying the maximum number of iterations for the
-  OTRIMLE criterion optimization.
-}
-\item{tol}{
-  Stopping criterion for the OTRIMLE criterion optimization. The
-  optimization stops when the difference between two
-  successive values of \code{log(icd)} is smaller than \code{tol}.
-}
-\item{em.iter.max}{
-  An integer value specifying the maximum number of iterations allowed
-  in the underlying EM-algorithm.
-}
-\item{em.tol}{
-  Stopping criterion for the the underlying EM-algorithm. An EM iteration
-  stops if two successive improper log-likelihood values are within
-  \code{em.tol}.
-}
-\item{monitor}{Set the verbosity level of tracing messages.  Possible values
-  are \code{monitor=0} (no messages), \code{monitor=1} and
-  \code{monitor=2} for increased verbosity.
-}
+  \item{iter.max}{
+    An integer value specifying the maximum number of iterations allowed
+    in the underlying ECM-algorithm.
+  }
+  \item{tol}{
+    Stopping criterion for the underlying ECM-algorithm. An ECM iteration
+    stops if two successive improper log-likelihood values are within
+    \code{tol}.
+  }
+  \item{ncores}{
+    an integer value defining the number of cores used for parallel
+    computing. When \code{ncores=NULL} (default), the number \code{r} of
+    available cores is detected, and \code{(r-1)} of them are used (See
+    Details).
+  }
+  \item{monitor}{logical. If \code{TRUE} progress  messages are printed on
+    screen.
+  }
 }
 
 
 \details{
-  The \code{otrimle} function allows to
-  approximate the OTRIMLE solution with two different versions of the underlying EM-type
-  algorithm.
+  The \code{otrimle} function computes the OTRIMLE solution based on  the
+  ECM-algorithm (expectation conditional maximization algorithm)
+  proposed in Coretto and Hennig (2017).
 
-  \describe{
-    \item{\emph{ECM-algorithm}: \code{opt.selector=FALSE,
-	cmstep=TRUE}}{
-      The OTRIMLE search computes the RIMLE (see
-      \code{\link{rimle}}) based on the \emph{ECM-algorithm} proposed in Coretto  and
-      Hennig (2016). In this case both the \emph{eigenratio constraint}, and the
-      \emph{noise proportion constraint} are enforced in each conditional
-      M-step of the algorithm.
-    }
+  The otrimle criterion is minimized over the \code{logicd} grid of
+  \code{log(icd)} values using parallel computing based on the
+  \code{\link[foreach]{foreach}}.
+  Note that, depending on the BLAS/LAPACK setting, increasing \code{ncores} may not
+  produce the desired reduction in computing time.  The latter
+  happens when optimized linear algebra routines are in use (e.g.
+  OpenBLAS, Intel Math Kernel Library (MKL), etc.). These optimized shared
+  libraries  already implement multithreading. Therefore, in this case
+  increasing \code{ncores} may only reduce the computing time marginally.
 
-    \item{\emph{Approximate EM-algorithm}: \code{opt.selector=TRUE,
-	cmstep=FALSE}}{
-      This corresponds to the algorithm
-      proposed in Coretto and Hennig (2015). In this case
-      covariance matrices are regularized in each step based on
-      \code{det.min}, and the \emph{eigenratio constraint} is applied
-	only at the end of
-      the EM iteration.
-    }
-  }
-
-  The \emph{ECM-algorithm} is the default choice. The \emph{Approximate
-    EM-algorithm} is often slower than the \emph{ECM-algorithm} by a factor of two. Furthermore the \emph{Approximate
-    EM-algorithm}  is
-  more prone to lead to problems indicated by \code{code=0} (see
-  \emph{Value}-section
-  below) because of  numerical degeneracies connected to a low value of
-  \code{min.det}. \cr
-
-  There may be datasets for which the function does not provide a
+  Occasionally,  there may be datasets for which the function does not provide a
   solution based on default arguments. This corresponds to
-  \code{code=0} and \code{flag=1} or 2 or 3 in the output (see
+  \code{code=0} and \code{flag=1} or \code{flag=2} in the output (see
   \emph{Value}-section below).  This usually happens when some (or all) of the
   following circumstances occur: (i) \code{erc} is too
-  large; (ii) npr.max is too large; (iii) choice of the initial
+  large; (ii) \code{npr.max} is too large; (iii) choice of the initial
   partition. Regarding (i) and (ii) it is not possible to give numeric
   references because whether these numbers are too large/small
   strongly depends on the sample size and the dimensionality of the
@@ -148,15 +103,21 @@ otrimle(data, G, initial=NULL, logicd=NULL,
   these quantities. \cr
 
   It is suggested to try the following whenever a \code{code=0}
-  non-solution occurs. Set \code{logicd} wide enough
-  (e.g. \code{logicd=c(-500,-5)}), choose \code{erc=1}, and a low choice
-  of \code{npr.max} (e.g. \code{npr.max=0.02}).  Monitor the solution
-  with the criterion profiling plot
+  non-solution occurs. Set the \code{logicd} range wide enough
+  (e.g. \code{logicd=seq(-500,-5, length=50)}), choose \code{erc=1},
+  and a low choice of \code{npr.max} (e.g. \code{npr.max=0.02}).
+  Monitor the solution with the criterion profiling plot
   (\code{\link{plot.otrimle}}). According to the criterion profiling
   plot change \code{logicd}, and increase \code{erc} and \code{npr.max}
   up to the point when a "clear" minimum in the criterion profiling plot
   is obtained. If this strategy does not work it is suggested to
-  experiment with a different initial partitions (see \code{initial} above).
+  experiment with a different initial partitions (see \code{initial}
+  above).
+
+  Note that an earlier approximate version of the algorithm was originally
+  proposed in Coretto and Hennig (2016). Software for the original
+  version of the algorithm can be found in the supplementary materials
+  of Coretto and Hennig (2016).
 }
 
 
@@ -180,11 +141,9 @@ otrimle(data, G, initial=NULL, logicd=NULL,
     below).
     \code{flag=2} if enforcement of the \emph{noise proportion constraint}
     failed for numerical reasons.
-    \code{flag=3} if enforcement of the \emph{eigenratio constraint} failed for
-    numerical reasons.
-    \code{flag=4} if the  \emph{noise proportion constraint} has been
+    \code{flag=3} if the  \emph{noise proportion constraint} has been
     successfully applied at least once.
-    \code{flag=5} if the  \emph{eigenratio constraint} has been
+    \code{flag=4} if the  \emph{eigenratio constraint} has been
     successfully applied at least once.
   }
   \item{iter}{
@@ -246,16 +205,16 @@ otrimle(data, G, initial=NULL, logicd=NULL,
 
 
 \section{References}{
-  Coretto, P.  and C. Hennig (2015).
-  Robust improper maximum likelihood: tuning, computation, and a comparison with other methods for robust Gaussian clustering.
-  To appear on the \emph{Journal of the American Statistical Association}.
-  arXiv preprint at \href{http://arxiv.org/abs/1406.0808}{arXiv:1406.0808}
-  with (\href{http://arxiv.org/src/1406.0808v4/anc/supplement.pdf}{supplement}).
-
-
   Coretto, P.  and C. Hennig (2016).
-  Consistency, breakdown robustness, and algorithms for robust improper maximum likelihood clustering.
-  arXiv preprint at \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
+  Robust improper maximum likelihood: tuning, computation, and a comparison with
+  other methods for robust Gaussian clustering.
+  \emph{Journal of the American Statistical Association}, Vol. 111(516), pp. 1648-1659.
+  \href{http://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
+
+  Coretto, P.  and C. Hennig (2017).
+  Consistency, breakdown robustness, and algorithms for robust improper maximum
+  likelihood clustering.
+  arXiv preprint available at \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
 }
 
 
@@ -283,8 +242,8 @@ x <- banknote[,-1]
 
 ## Perform otrimle clustering with default arguments
 set.seed(1)
-a <- otrimle(data=x, G=2)
-print(a)
+a <- otrimle(data=x, G=2, logicd=c(-Inf, -50, -10), ncores=1)
+
 
 ## Plot clustering
 plot(a, data=x, what="clustering")
@@ -295,10 +254,38 @@ plot(a, what="criterion")
 ## Plot Improper log-likelihood profiling
 plot(a, what="iloglik")
 
-## P\code{-}P plot of the clusterwise empirical weighted squared Mahalanobis
+## P-P plot of the clusterwise empirical weighted squared Mahalanobis
 ## distances against the target distribution pchisq(, df=ncol(data))
 plot(a, what="fit")
 plot(a, what="fit", cluster=1)
 
+
+\dontrun{
+## Perform the same example using the finer default grid of logicd
+## values using multiple cores
+##
+a <- otrimle(data = x, G = 2)
+
+## Inspect the otrimle criterion-vs-logicd
+plot(a, what = 'criterion')
+
+## The minimum occurs at  a$logicd=-9, and exploring a$optimization it
+## cane be seen that the interval [-12.5, -4] brackets the optimal
+## solution. We search with a finer grid located around the minimum
+##
+b <- otrimle(data = x, G = 2, logicd = seq(-12.5, -4, length.out = 25))
+
+## Inspect the otrimle criterion-vs-logicd
+plot(b, what = 'criterion')
+
+## Check the difference between the two clusterings
+table(A = a$cluster, B = b$cluster)
+
+## Check differences in estimated parameters
+##
+colSums(abs(a$mean - b$mean))               ## L1 distance for mean vectors
+apply({a$cov-b$cov}, 3, norm, type = "F")   ## Frobenius distance for covariances
+c(Noise=abs(a$npr-b$npr), abs(a$cpr-b$cpr)) ## Absolute difference for proportions
+}
 }
 

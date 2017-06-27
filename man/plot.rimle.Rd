@@ -67,16 +67,16 @@
 
 
 \section{References}{
-  Coretto, P.  and C. Hennig (2015).
-  Robust improper maximum likelihood: tuning, computation, and a comparison with other methods for robust Gaussian clustering.
-  To appear on the \emph{Journal of the American Statistical Association}.
-  arXiv preprint at \href{http://arxiv.org/abs/1406.0808}{arXiv:1406.0808}
-  with (\href{http://arxiv.org/src/1406.0808v4/anc/supplement.pdf}{supplement}).
-
-
   Coretto, P.  and C. Hennig (2016).
-  Consistency, breakdown robustness, and algorithms for robust improper maximum likelihood clustering.
-  arXiv preprint at \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
+  Robust improper maximum likelihood: tuning, computation, and a comparison with
+  other methods for robust Gaussian clustering.
+  \emph{Journal of the American Statistical Association}, Vol. 111(516), pp. 1648-1659.
+  \href{http://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
+
+  Coretto, P.  and C. Hennig (2017).
+  Consistency, breakdown robustness, and algorithms for robust improper maximum
+  likelihood clustering.
+  arXiv preprint available at \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
 }
 
 
@@ -93,23 +93,23 @@ x <- banknote[,-1]
 
 ## Perform rimle clustering with default arguments
 set.seed(1)
-a <- rimle(data=x, G=2)
+a <- rimle(data = x, G = 2)
 print(a)
 
 ## Plot clustering
-plot(a, data=x, what="clustering")
+plot(a, data = x, what = "clustering")
 
 ## Plot clustering on selected margins
-plot(a, data=x, what="clustering", margins=4:6)
+plot(a, data = x, what = "clustering", margins = 4:6)
 
 ## Plot clustering on the first two principal components
-z <- scale(x) \%*\%   eigen(cor(x), symmetric=TRUE)$vectors
-colnames(z) <- paste("PC", 1:ncol(z), sep="")
-plot(a, data=z, what="clustering", margins=1:2)
+z <- scale(x) \%*\%   eigen(cor(x), symmetric = TRUE)$vectors
+colnames(z) <- paste("PC", 1:ncol(z), sep = "")
+plot(a, data = z, what = "clustering", margins = 1:2)
 
 ## Fit plot for all clusters
-plot(a, what="fit")
+plot(a, what = "fit")
 
 ## Fit plot for cluster 1
-plot(a, what="fit", cluster=1)
+plot(a, what = "fit", cluster = 1)
 }
