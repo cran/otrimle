@@ -102,6 +102,7 @@ otrimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc =
     .ECM(data = data, initial = initial, logicd = A[k, 1], npr.max = npr.max, 
       erc = erc, iter.max = iter.max, tol = tol, grid.operation = TRUE)
   }
+  stopImplicitCluster()
   for (k in 1:nGrid) {
     A[k, ] <- B[[k]]
   }

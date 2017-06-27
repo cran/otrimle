@@ -7,8 +7,10 @@ exportPattern ("^[^\\.]")
 importFrom("utils", "citHeader")
 importFrom("mclust", "hc")
 importFrom("foreach", "foreach")
-importFrom("doParallel", "registerDoParallel")
 importFrom("parallel", "detectCores")
+importFrom("doParallel", "registerDoParallel")
+importFrom("doParallel", "stopImplicitCluster")
+
 
 
 S3method(plot,otrimle)
