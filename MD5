@@ -1,5 +1,5 @@
-078953671b4cf6932c5b66ffcb2c9b2f *ChangeLog
-89a47072a47a6f68653f1ca0d6403582 *DESCRIPTION
+5243db0f121e763ecd87a93603b0cd56 *ChangeLog
+60ef2a735c6fb29bd6817260171f3684 *DESCRIPTION
 e1e8ed641352fefacd8efbe3634f4cef *NAMESPACE
 96cba6779ee81c4672347533e9df8fe7 *R/constraints.R
 3c0c9b64ee8b4e29fd63fe0e284a2f7b *R/ecm.R
@@ -11,7 +11,7 @@ b4d9f325289d319dc376919acc215de7 *R/plotting.R
 69486ed853c263a6551f8aac9ced4133 *R/rimle.R
 3abaf1f58fa4c1cb5cf76751865ac8ca *R/zzz.R
 c70670bdd1cee9deeccc8213b218f054 *data/banknote.rda
-d728ab2cce219e11a23a5a4fd8524791 *inst/CITATION
+9293115691f2b9604616acc8c99a5a0b *inst/CITATION
 eca98078013cc96cdfc1af6a4ddcad66 *man/InitClust.Rd
 8ce9119241e62579ffdc9f02afc97124 *man/banknote.Rd
 74179872f15d04e79dc1fc05d02c228e *man/otrimle.Rd

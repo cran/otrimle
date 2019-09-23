@@ -37,20 +37,21 @@ citEntry(entry="Article",
         )
 
 
-
-
-
-citEntry(entry="Misc",
+citEntry(entry="Article",
          title   = "Consistency, breakdown robustness, and algorithms for robust
                     improper maximum likelihood clustering",
          author  = personList(person(given="Pietro", family="Coretto"),
                              person(given=c("Christian"), family="Hennig")),
-         year    = "2017",
-         note    = "arXiv:1309.6895",
-         url     = "https://arxiv.org/abs/1309.6895",
-         paste("Coretto, P.  and C. Hennig (2017). Consistency, breakdown
-                robustness, and algorithms for robust improper maximum likelihood
-                clustering.  arXiv:1309.6895 (url: http://arxiv.org/abs/1309.6895)")
+         year    = "2016",
+         journal = "Journal of Machine Learning Research",
+         volume  = 18,
+         number  = 142,
+         pages   = "1--39",
+         url     = "http://jmlr.org/papers/v18/16-382.html",
+         textVersion =
+         paste("P. Coretto and C. Hennig (2017). Consistency, breakdown robustness,
+               and algorithms for robust improper maximum likelihood clustering. 
+               Journal of Machine Learning Research, Vol. 18(142), pp. 1-39")
         )
 
 

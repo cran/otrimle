@@ -1,9 +1,12 @@
+2019/09/23:  Pietro Coretto  <pcoretto@unisa.it>
+================================================
+   * Updated  CITATION file with updated references
+
+	
 2017/06/24:  Pietro Coretto  <pcoretto@unisa.it>
 ================================================
-   * v 1.0
-   * Old approximate EM algorithm replaced with ECM algorithm of Coretto and Hennig 
+   * v 1.1
+   * Old approximate EM algorithm replaced with ECM algorithm of Coretto and Hennig
      proposed in <https://arxiv.org/abs/1309.6895>
    * Parallelization introduced in otrimle()
    * Added CITATION file with updated references
- 
- 
