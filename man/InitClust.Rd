@@ -79,10 +79,10 @@
    Algorithms for model-based Gaussian hierarchical clustering.
    \emph{SIAM Journal on Scientific Computing} 20:270-281.
 
-   Coretto, P.  and C. Hennig (2017).
-   Consistency, breakdown robustness, and algorithms for robust improper maximum
-   likelihood clustering. arXiv preprint available at
-   \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
+   P. Coretto and C. Hennig (2017).
+   Consistency, breakdown robustness, and algorithms for robust improper
+   maximum  likelihood clustering.
+   \emph{Journal of Machine Learning Research}, Vol. 18(142), pp. 1-39.
  }
 
 

@@ -78,12 +78,13 @@
   Robust improper maximum likelihood: tuning, computation, and a comparison with
   other methods for robust Gaussian clustering.
   \emph{Journal of the American Statistical Association}, Vol. 111(516), pp. 1648-1659.
-  \href{http://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
-
-  Coretto, P.  and C. Hennig (2017).
-  Consistency, breakdown robustness, and algorithms for robust improper maximum
-  likelihood clustering.
-  arXiv preprint available at \href{http://arxiv.org/abs/1309.6895}{arXiv:1309.6895}.
+  \href{http://dx.doi.org/10.1080/01621459.2015.1100996}{doi:
+    10.1080/01621459.2015.1100996}
+  
+  P. Coretto and C. Hennig (2017).
+  Consistency, breakdown robustness, and algorithms for robust improper
+  maximum  likelihood clustering.
+  \emph{Journal of Machine Learning Research}, Vol. 18(142), pp. 1-39.
 }
 
 

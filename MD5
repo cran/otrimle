@@ -1,5 +1,5 @@
-5243db0f121e763ecd87a93603b0cd56 *ChangeLog
-60ef2a735c6fb29bd6817260171f3684 *DESCRIPTION
+2e7f8d8954c6fbc7a12da9cb7d1ecdbb *ChangeLog
+14ed0c56fc497fd16c64b26db8b7d25c *DESCRIPTION
 e1e8ed641352fefacd8efbe3634f4cef *NAMESPACE
 96cba6779ee81c4672347533e9df8fe7 *R/constraints.R
 3c0c9b64ee8b4e29fd63fe0e284a2f7b *R/ecm.R
@@ -12,9 +12,9 @@ b4d9f325289d319dc376919acc215de7 *R/plotting.R
 3abaf1f58fa4c1cb5cf76751865ac8ca *R/zzz.R
 c70670bdd1cee9deeccc8213b218f054 *data/banknote.rda
 9293115691f2b9604616acc8c99a5a0b *inst/CITATION
-eca98078013cc96cdfc1af6a4ddcad66 *man/InitClust.Rd
+d9ceeaebea9710c53dd76a8ea6520ade *man/InitClust.Rd
 8ce9119241e62579ffdc9f02afc97124 *man/banknote.Rd
-74179872f15d04e79dc1fc05d02c228e *man/otrimle.Rd
-9081a2bba1c10439f55c640392ace40d *man/plot.otrimle.Rd
-2b5461da119af44bba4717fee59e33c1 *man/plot.rimle.Rd
-d9c9a4fb7fb42b85b1a0a118b6ce05ba *man/rimle.Rd
+4cd0cdec967a6734dc4f098abe173eb9 *man/otrimle.Rd
+9f3f9f8bc51098866520a0b461432385 *man/plot.otrimle.Rd
+f1331ea0628f3b2c585aaf3d21e246ba *man/plot.rimle.Rd
+38f5db8ec67539d0d9dfa9df046ff8a1 *man/rimle.Rd
