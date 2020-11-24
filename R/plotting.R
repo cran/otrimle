@@ -84,25 +84,39 @@
   ok <- !is.na(x$optimization[, 2])
   X <- x$optimization[ok, 1]
   Y <- x$optimization[ok, 2]
-  if (X[1] == -Inf) {
-    infval <- min(X[-1]) - 0.3 * max(diff(X[-1]))
-    X[1] <- infval
-    x.lim <- c(infval, max(X))
-    y.lim <- range(Y)
-    plot(X[-1], Y[-1], t = "b", xlim = x.lim, ylim = y.lim, pch = 20, lwd = 2, 
-      col = 3, main = "OTRIMLE: criterion profiling", axes = FALSE, frame = TRUE, 
-      xlab = "log(icd)", ylab = "Criterion", cex.main = 1)
-    x.ticks <- axTicks(1)
-    y.ticks <- axTicks(2)
-    axis(1, las = 1, at = c(X[1], x.ticks[-1]), labels = c(expression(paste("-", 
-      infinity)), x.ticks[-c(1)]))
-    axis(2, las = 0, at = y.ticks, labels = y.ticks)
-    points(X[1], Y[1], pch = 20, col = 2, cex = 1)
-    segments(x0 = X[1], y0 = 0, x1 = X[1], y1 = Y[1], col = 2, lty = 2)
+  if (length(X) == 1) {
+    cat("\n")
+    cat("OTRIMLE object contains a single solution at logicd=", x$logicd, ", see deails:\n\n", 
+      sep = "")
+    print(x$optimization)
+    cat("\n")
   }
   else {
-    plot(X, Y, t = "b", pch = 20, lwd = 2, col = 3, cex = 1, main = "OTRIMLE: criterion profiling", 
-      xlab = "log(icd)", ylab = "Criterion", cex.main = 1)
+    if (X[1] == -Inf) {
+      if (length(X[-1]) == 1) {
+        infval <- X[-1] - 0.3 * abs(X[-1])
+      }
+      else {
+        infval <- min(X[-1]) - 0.3 * max(diff(X[-1]))
+      }
+      X[1] <- infval
+      x.lim <- c(infval, max(X))
+      y.lim <- range(Y)
+      plot(X[-1], Y[-1], t = "b", xlim = x.lim, ylim = y.lim, pch = 20, lwd = 2, 
+        col = 3, main = "OTRIMLE: criterion profiling", axes = FALSE, frame = TRUE, 
+        xlab = "log(icd)", ylab = "Criterion", cex.main = 1)
+      x.ticks <- axTicks(1)
+      y.ticks <- axTicks(2)
+      axis(1, las = 1, at = c(X[1], x.ticks[-1]), labels = c(expression(paste("-", 
+        infinity)), x.ticks[-c(1)]))
+      axis(2, las = 0, at = y.ticks, labels = y.ticks)
+      points(X[1], Y[1], pch = 20, col = 2, cex = 1)
+      segments(x0 = X[1], y0 = 0, x1 = X[1], y1 = Y[1], col = 2, lty = 2)
+    }
+    else {
+      plot(X, Y, t = "b", pch = 20, lwd = 2, col = 3, cex = 1, main = "OTRIMLE: criterion profiling", 
+        xlab = "log(icd)", ylab = "Criterion", cex.main = 1)
+    }
   }
 }
 .PlotOtrimleIloglik <- function(x) {
@@ -110,25 +124,40 @@
   ok <- !is.na(x$optimization[, 2])
   X <- x$optimization[ok, 1]
   Y <- x$optimization[ok, 3]
-  if (X[1] == -Inf) {
-    infval <- min(X[-1]) - 0.3 * max(diff(X[-1]))
-    X[1] <- infval
-    x.lim <- c(infval, max(X))
-    y.lim <- range(Y)
-    plot(X[-1], Y[-1], t = "b", xlim = x.lim, ylim = y.lim, pch = 20, lwd = 2, 
-      col = 3, main = "OTRIMLE: improper log-likelihood profiling", axes = FALSE, 
-      frame = TRUE, xlab = "log(icd)", ylab = "Improper log-likelihood", cex.main = 1)
-    x.ticks <- axTicks(1)
-    y.ticks <- axTicks(2)
-    axis(1, las = 1, at = c(X[1], x.ticks[-1]), labels = c(expression(paste("-", 
-      infinity)), x.ticks[-c(1)]))
-    axis(2, las = 0, at = y.ticks, labels = y.ticks)
-    points(X[1], Y[1], pch = 20, col = 2, cex = 1)
-    segments(x0 = X[1], y0 = 0, x1 = X[1], y1 = Y[1], col = 2, lty = 2)
+  if (length(X) == 1) {
+    cat("\n")
+    cat("OTRIMLE object contains a single solution at logicd=", x$logicd, ", see deails:\n\n", 
+      sep = "")
+    print(x$optimization)
+    cat("\n")
   }
   else {
-    plot(X, Y, t = "b", pch = 20, lwd = 2, col = 3, cex = 1, main = "OTRIMLE: improper log-likelihood profiling", 
-      xlab = "log(icd)", ylab = "Improper log-likelihood", cex.main = 1)
+    if (X[1] == -Inf) {
+      if (length(X[-1]) == 1) {
+        infval <- X[-1] - 0.3 * abs(X[-1])
+      }
+      else {
+        infval <- min(X[-1]) - 0.3 * max(diff(X[-1]))
+      }
+      X[1] <- infval
+      x.lim <- c(infval, max(X))
+      y.lim <- range(Y)
+      plot(X[-1], Y[-1], t = "b", xlim = x.lim, ylim = y.lim, pch = 20, lwd = 2, 
+        col = 3, main = "OTRIMLE: improper log-likelihood profiling", axes = FALSE, 
+        frame = TRUE, xlab = "log(icd)", ylab = "Improper log-likelihood", 
+        cex.main = 1)
+      x.ticks <- axTicks(1)
+      y.ticks <- axTicks(2)
+      axis(1, las = 1, at = c(X[1], x.ticks[-1]), labels = c(expression(paste("-", 
+        infinity)), x.ticks[-c(1)]))
+      axis(2, las = 0, at = y.ticks, labels = y.ticks)
+      points(X[1], Y[1], pch = 20, col = 2, cex = 1)
+      segments(x0 = X[1], y0 = 0, x1 = X[1], y1 = Y[1], col = 2, lty = 2)
+    }
+    else {
+      plot(X, Y, t = "b", pch = 20, lwd = 2, col = 3, cex = 1, main = "OTRIMLE: improper log-likelihood profiling", 
+        xlab = "log(icd)", ylab = "Improper log-likelihood", cex.main = 1)
+    }
   }
 }
 plot.otrimle <- function(x, what = c("criterion", "iloglik", "fit", "clustering"), 

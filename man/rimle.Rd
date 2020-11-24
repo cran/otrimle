@@ -10,16 +10,14 @@
 \description{
   \code{rimle} searches for \code{G} approximately Gaussian-shaped
   clusters with/without noise/outliers. The method's tuning controlling
-  the noise
-  level is fixed and is to be provided by the user or will be guessed by
-  the function in
-  a rather quick and dirty way (\code{\link{otrimle}} performs a more
-  sophisticated data-driven choice).
+  the noise level is fixed and is to be provided by the user or will be guessed by
+  the function in a rather quick and dirty way (\code{\link{otrimle}}
+  performs  a more sophisticated data-driven choice).
 }
 
 
 \usage{
-rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=50, iter.max=500, tol=1e-6)
+rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=20, iter.max=500, tol=1e-6)
 }
 
 
@@ -42,11 +40,13 @@ rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=50, iter.max=500, tol
     the RIMLE's tuning for controlling the size of the noise.
     If \code{logicd=NULL} (default), an \code{icd} value is guessed
     based on the data. A pure Gaussian Mixture Model fit is obtained
-    with \code{log(icd)=-Inf}.
+    with \code{logicd = -Inf}.
   }
   \item{npr.max}{
-    A number in \code{(0,1)} specifying the maximum proportion of
-    noise/outliers. This defines the \emph{noise proportion constraint}.
+    A number in \code{[0,1)} specifying the maximum proportion of
+    noise/outliers. This defines the \emph{noise proportion
+    constraint}. If \code{npr.max=0} a solution without noise
+    component is computed (corresponding to \code{logicd = -Inf}.
   }
   \item{erc}{
     A number \code{>=1} specifying the maximum allowed ratio between
@@ -73,7 +73,7 @@ rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=50, iter.max=500, tol
 \details{
   The \code{rimle} function computes the RIMLE solution using the
   ECM-algorithm proposed in Coretto and Hennig (2017).
-
+  
   There may be datasets for which the function does not provide a
   solution based on default arguments. This corresponds to
   \code{code=0} and \code{flag=1} or \code{flag=2}  in the output (see
@@ -85,6 +85,24 @@ rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=50, iter.max=500, tol
   \code{\link{otrimle}} function. The \emph{Details} section of
   \code{\link{otrimle}} suggests several actions to take
   whenever a \code{code=0} non-solution occurs.
+
+  The \code{pi} object returned by the \code{rimle} function (see
+  \emph{Value}) corresponds to the vector of \code{pi} parameters in
+  the underlying pseudo-model (1) defined in Coretto and Hennig (2017).
+  With \code{logicd = -Inf} the \code{rimle} function approximates the
+  MLE for the \emph{plain} Gaussian mixture model with eigenratio
+  covariance regularization, in this case the the first element of the
+  \code{pi} vector is set to zero because the noise component is not
+  considered.  In general, for iid sampling from finite mixture models
+  context, these \emph{pi} parameters define expected clusters'
+  proportions. Because of the noise proportion constraint in the RIMLE,
+  there are situations where this connection may not happen in
+  practice. The latter is likely to happen when both \code{logicd} and
+  \code{npr.max} are large. Therefore, estimated expected clusters'
+  proportions are reported in the \code{exproportion} object of the
+  \code{rimle} output, and these are computed based on the
+  improper posterior probabilities given in \code{tau}.
+  See Coretto and Hennig (2017) for more discussion on this. 
 
   An earlier approximate version of the algorithm was originally
   proposed in Coretto and Hennig (2016). Software for the original
@@ -130,11 +148,8 @@ rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=50, iter.max=500, tol
   \item{criterion}{
     Value of the OTRIMLE criterion.
   }
-  \item{npr}{
-    Estimated expected noise proportion.
-  }
-  \item{cpr}{
-    Vector of estimated expected cluster proportions (notice that \code{sum(cpr)=1-npr}).
+  \item{pi}{
+    Estimated vector of the \code{pi} parameters of the underlying pseudo-model (see \emph{Details}).
   }
   \item{mean}{
     A matrix of dimension \code{ncol(data) x G} containing the
@@ -162,6 +177,9 @@ rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=50, iter.max=500, tol
   \item{size}{
     A vector of integers with sizes (counts) of each cluster.
   }
+  \item{exproportion}{
+    A vector of estimated expected clusters' proportions (see \emph{Details}).
+  }
 }
 
 
@@ -175,13 +193,14 @@ rimle(data, G, initial=NULL, logicd=NULL, npr.max=0.5, erc=50, iter.max=500, tol
   Robust improper maximum likelihood: tuning, computation, and a comparison with
   other methods for robust Gaussian clustering.
   \emph{Journal of the American Statistical Association}, Vol. 111(516), pp. 1648-1659.
-  \href{http://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
+  \href{https://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
 
 
   P. Coretto and C. Hennig (2017).
   Consistency, breakdown robustness, and algorithms for robust improper
   maximum  likelihood clustering.
   \emph{Journal of Machine Learning Research}, Vol. 18(142), pp. 1-39.
+  \href{https://jmlr.org/papers/v18/16-382.html}{https://jmlr.org/papers/v18/16-382.html}
 }
 
 

@@ -29,7 +29,7 @@
      used for the denoising step (see \emph{Details}).
    }
    \item{knnd.trim}{
-     A number in (0,1) which defines the proportion of points
+     A number in [0,1) which defines the proportion of points
      initialized as noise. Tipically \code{knnd.trim<=0.5} (see \emph{Details}).
    }
    \item{modelName}{
@@ -48,10 +48,10 @@
 
 
  \details{
-   The initialization is discussed  in details in Coretto and Hennig (2016). Two
+   The initialization is based on Coretto and Hennig (2017). First, wwo
    steps are performed:\cr
 
-   \emph{Denoising step:} for each data point compute its
+   \emph{Step 1 (denoising step):} for each data point compute its
    \code{k}th\code{-}nearest neighbors
    distance (\code{k-}NND). All points with \code{k-}NND  larger
    than the (1-\code{knnd.trim})\code{-}quantile  of the \code{k-}NND
@@ -59,13 +59,18 @@
    \code{k} is that:  \code{(k-1)}, but not \code{k}, points close
    together may still be interpreted  as noise or outliers
 
-   \emph{Clustering step:} perform the model-based hierarchical clustering (MBHC)
-   proposed in Fraley (1998). This step is performed using
+   \emph{Step 2 (clustering step):} perform the model-based hierarchical
+   clustering (MBHC) proposed in Fraley (1998). This step is performed using
    \code{\link[mclust]{hc}}. The input argument \code{modelName} is passed
    to \code{\link[mclust]{hc}}. See \emph{Details} of
    \code{\link[mclust]{hc}} for more details.
 
-
+   If the previous \emph{Step 2} fails to provide \code{G} clusters each
+   containing at least 2 distinct data points, it is replaced with
+   classical hirararchical clustering implemented in
+   \code{\link[stats]{hclust}}. Finally, if
+   \code{\link[stats]{hclust}} fails to provide a valid partition, up
+   to ten random partitions are tried.
  }
 
 
@@ -83,6 +88,7 @@
    Consistency, breakdown robustness, and algorithms for robust improper
    maximum  likelihood clustering.
    \emph{Journal of Machine Learning Research}, Vol. 18(142), pp. 1-39.
+   \href{https://jmlr.org/papers/v18/16-382.html}{https://jmlr.org/papers/v18/16-382.html}
  }
 
 

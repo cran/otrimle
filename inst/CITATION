@@ -47,7 +47,7 @@ citEntry(entry="Article",
          volume  = 18,
          number  = 142,
          pages   = "1--39",
-         url     = "http://jmlr.org/papers/v18/16-382.html",
+         url     = "https://jmlr.org/papers/v18/16-382.html",
          textVersion =
          paste("P. Coretto and C. Hennig (2017). Consistency, breakdown robustness,
                and algorithms for robust improper maximum likelihood clustering. 

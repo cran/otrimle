@@ -14,8 +14,8 @@
 
 
 \usage{
-otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
-        iter.max = 500, tol = 1e-06, ncores = NULL, monitor = TRUE)
+otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 20,
+beta = 0, iter.max = 500, tol = 1e-06, ncores = NULL, monitor = TRUE)
 }
 
 
@@ -40,9 +40,10 @@ otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
     search path.
   }
   \item{npr.max}{
-    A number in \code{(0,1)} specifying the maximum proportion of
+    A number in \code{[0,1)} specifying the maximum proportion of
     noise/outliers. This defines the \emph{noise proportion
-      constraint}.
+      constraint}. If \code{npr.max=0} a single solution without noise
+    component is computed (corresponding to \code{logicd = -Inf}.
   }
   \item{erc}{
     A number \code{>=1} specifying the maximum allowed ratio between
@@ -53,6 +54,10 @@ otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
     setting of \code{erc}, it is suggested to scale the columns of
     \code{data} (see \code{\link[base]{scale}}) whenever measurement units
     of the different variables are grossly incompatible.
+  }
+  \item{beta}{
+    A non-negative constant. This is the \emph{beta} penalty coefficient
+    introduced in Coretto and Hennig (2016). 
   }
   \item{iter.max}{
     An integer value specifying the maximum number of iterations allowed
@@ -67,7 +72,7 @@ otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
     an integer value defining the number of cores used for parallel
     computing. When \code{ncores=NULL} (default), the number \code{r} of
     available cores is detected, and \code{(r-1)} of them are used (See
-    Details).
+    \emph{Details}). If \code{ncores=1} no parallel backend is started.
   }
   \item{monitor}{logical. If \code{TRUE} progress  messages are printed on
     screen.
@@ -114,7 +119,27 @@ otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
   experiment with a different initial partitions (see \code{initial}
   above).
 
-  Note that an earlier approximate version of the algorithm was originally
+  TBA: Christian may add something about the \code{beta} here.
+  
+  The \code{pi} object returned by the \code{rimle} function (see
+  \emph{Value}) corresponds to the vector of \code{pi} parameters in
+  the underlying pseudo-model (1) defined in Coretto and Hennig (2017).
+  With \code{logicd = -Inf} the \code{rimle} function approximates the
+  MLE for the \emph{plain} Gaussian mixture model with eigenratio
+  covariance regularization, in this case the the first element of the
+  \code{pi} vector is set to zero because the noise component is not
+  considered.  In general, for iid sampling from finite mixture models
+  context, these \emph{pi} parameters define expected clusters'
+  proportions. Because of the noise proportion constraint in the RIMLE,
+  there are situations where this connection may not happen in
+  practice. The latter is likely to happen when both \code{logicd} and
+  \code{npr.max} are large. Therefore, estimated expected clusters' proportions
+  are reported in the \code{exproportion} object of the \code{rimle}
+  output, and these are computed based on the improper posterior
+  probabilities given in \code{tau}.  See Coretto and Hennig (2017) for
+  more discussion on this.
+  
+  An earlier approximate version of the algorithm was originally
   proposed in Coretto and Hennig (2016). Software for the original
   version of the algorithm can be found in the supplementary materials
   of Coretto and Hennig (2016).
@@ -159,11 +184,8 @@ otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
   \item{criterion}{
     Resulting value of the OTRIMLE criterion.
   }
-  \item{npr}{
-    Estimated expected noise proportion.
-  }
-  \item{cpr}{
-    Vector of estimated expected cluster proportions (notice that \code{sum(cpr)=1-npr}).
+  \item{pi}{
+    Estimated vector of the \code{pi} parameters of the underlying pseudo-model (see \emph{Details}).
   }
   \item{mean}{
     A matrix of dimension \code{ncol(data) x G} containing the
@@ -191,10 +213,15 @@ otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
   \item{size}{
     A vector of integers with sizes (counts) of each cluster.
   }
+  \item{exproportion}{
+    A vector of estimated expected clusters' proportions (see \emph{Details}).
+  }
   \item{optimization}{
     A data.frame with  the OTRIMLE optimization profiling. For each
     value of \code{log(icd)} explored by the algorithm the data.frame
-    stores \code{criterion, iloglik, code} and  \code{flag}.
+    stores \code{logicd, criterion, iloglik, code, flag}
+    (defined above), and \code{enpr} that denotes the expected noise
+    proportion.
   }
 }
 
@@ -209,12 +236,13 @@ otrimle(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50,
   Robust improper maximum likelihood: tuning, computation, and a comparison with
   other methods for robust Gaussian clustering.
   \emph{Journal of the American Statistical Association}, Vol. 111(516), pp. 1648-1659.
-  \href{http://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
+  \href{https://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
 
   P. Coretto and C. Hennig (2017).
   Consistency, breakdown robustness, and algorithms for robust improper
   maximum  likelihood clustering.
-  \emph{Journal of Machine Learning Research}, Vol. 18(142), pp. 1-39.
+  \emph{Journal of Machine Learning Research}, Vol. 18(142), pp. 1-39. 
+  \href{https://jmlr.org/papers/v18/16-382.html}{https://jmlr.org/papers/v18/16-382.html}
 }
 
 
@@ -244,7 +272,6 @@ x <- banknote[,-1]
 set.seed(1)
 a <- otrimle(data=x, G=2, logicd=c(-Inf, -50, -10), ncores=1)
 
-
 ## Plot clustering
 plot(a, data=x, what="clustering")
 
@@ -260,6 +287,30 @@ plot(a, what="fit")
 plot(a, what="fit", cluster=1)
 
 
+
+## Perform the same otrimle as before with non-zero penalty
+set.seed(1)
+b <- otrimle(data=x, G=2, beta = 0.5, logicd=c(-Inf, -50, -10), ncores=1)
+
+## Plot clustering
+plot(b, data=x, what="clustering")
+
+## Plot OTRIMLE criterion profiling
+plot(b, what="criterion")
+
+## Plot Improper log-likelihood profiling
+plot(b, what="iloglik")
+
+## P-P plot of the clusterwise empirical weighted squared Mahalanobis
+## distances against the target distribution pchisq(, df=ncol(data))
+plot(b, what="fit")
+plot(b, what="fit", cluster=1)
+
+
+
+
+
+   
 \dontrun{
 ## Perform the same example using the finer default grid of logicd
 ## values using multiple cores

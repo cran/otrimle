@@ -7,6 +7,7 @@ print.otrimle <- function(x, ...) {
       print(x$size)
       cat("\nAvailable components:\n")
       cat(paste(as.character(names(x)), collapse = ", "))
+      cat("\n")
     }
     else {
       cat("\nOTRIMLE with optimal logicd=", round(x$logicd, 6), " discovered G=", 
@@ -14,6 +15,7 @@ print.otrimle <- function(x, ...) {
       print(x$size[-1])
       cat("\nAvailable components:\n")
       cat(paste(as.character(names(x)), collapse = ", "))
+      cat("\n")
     }
   }
   else {
@@ -21,6 +23,7 @@ print.otrimle <- function(x, ...) {
       sep = "")
     cat("\n\nOptimization profiling:\n ", sep = "\n")
     print(x$optimization)
+    cat("\n")
   }
 }
 print.rimle <- function(x, ...) {
@@ -32,6 +35,7 @@ print.rimle <- function(x, ...) {
       print(x$size)
       cat("\nAvailable components:\n")
       cat(paste(as.character(names(x)), collapse = ", "))
+      cat("\n")
     }
     else {
       cat("\nRIMLE with fixed logicd=", round(x$logicd, 6), " discovered G=", 
@@ -39,11 +43,13 @@ print.rimle <- function(x, ...) {
       print(x$size[-1])
       cat("\nAvailable components:\n")
       cat(paste(as.character(names(x)), collapse = ", "))
+      cat("\n")
     }
   }
   else {
-    cat("\nRIMLE with fixed logicd=", round(x$logicd, 6), " could not find a solution based on the current settings. Please check flags below, and adjust settings as suggested in \"Details\" of help(\"rimle\").", 
+    cat("\nRIMLE could not find a solution based on the current settings. Please check flags below, and adjust settings as suggested in \"Details\" of help(\"rimle\").", 
       sep = "")
     cat(paste("\n\nFlags: ", x$flag, sep = ""))
+    cat("\n")
   }
 }

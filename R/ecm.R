@@ -1,4 +1,4 @@
-.ECM <- function(data, initial, logicd, npr.max, erc, iter.max, tol, grid.operation) {
+.ECM <- function(data, initial, logicd, npr.max, erc, beta, iter.max, tol, grid.operation) {
   N <- dim(data)[1L]
   P <- dim(data)[2L]
   G <- dim(initial)[2L] - 1
@@ -195,12 +195,13 @@
       sumtau.old <- sumtau.new
     }
   }
+  epr <- colMeans(tau.old)
   if (all(!flag[1:2])) {
     for (j in 1:G) {
       kd[j] <- max(abs(.wecdf(x = smd[, j], weights = tau.old[, 1 + j]) - pchisq(smd[, 
         j], df = P)))
     }
-    criterion <- (sum(kd * pr[-1])/sum(pr[-1]))
+    criterion <- sum(kd * pr[-1])/sum(pr[-1]) + beta * epr[1]
   }
   if (any(flag[c(1, 2)])) {
     ans$code <- 0
@@ -225,7 +226,7 @@
     else {
       ans$criterion <- criterion
       ans$iloglik <- iloglik.old
-      ans$npr <- pr[1]
+      ans$npr <- epr[1]
     }
   }
   if (!grid.operation) {
@@ -234,8 +235,7 @@
       ans$logicd <- logicd
       ans$iloglik <- iloglik.old
       ans$criterion <- criterion
-      ans$npr <- pr[1]
-      ans$cpr <- pr[-1]
+      ans$pi <- pr
       ans$mean <- M
       ans$cov <- V
       ans$tau <- tau.old
@@ -249,14 +249,16 @@
         }
         ans$size[1 + j] <- sum(ans$cluster == j)
       }
+      ans$exproportion <- epr
       VarNames <- colnames(data)
-      ClustName <- paste("Cluster.", 1:G, sep = "")
-      names(ans$cpr) <- colnames(ans$smd) <- colnames(ans$mean) <- ClustName
-      dimnames(ans$cov)[[3]] <- as.list(ClustName)
-      names(ans$size) <- colnames(ans$tau) <- c("Noise", ClustName)
-      if (!is.null(VarNames)) {
-        rownames(ans$mean) <- dimnames(ans$cov)[[1]] <- dimnames(ans$cov)[[2]] <- VarNames
-      }
+      ClustNames <- paste("Cluster.", 1:G, sep = "")
+      dimnames(ans$mean) <- list(VarNames, ClustNames)
+      dimnames(ans$cov) <- list(VarNames, VarNames, ClustNames)
+      dimnames(ans$tau) <- list(NULL, c("Noise", ClustNames))
+      dimnames(ans$smd) <- list(NULL, ClustNames)
+      names(ans$pi) <- c("Noise", ClustNames)
+      names(ans$exproportion) <- c("Noise", ClustNames)
+      names(ans$size) <- c("Noise", ClustNames)
     }
     else {
       ans$iter <- iter

@@ -1,5 +1,5 @@
-otrimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 50, 
-  iter.max = 500, tol = 1e-06, ncores = NULL, monitor = TRUE) {
+otrimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc = 20, 
+  beta = 0, iter.max = 500, tol = 1e-06, ncores = NULL, monitor = TRUE) {
   if (is.vector(data)) {
     data <- matrix(data, ncol = 1)
   }
@@ -25,19 +25,20 @@ otrimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc =
       stop("G is not equal to max(initial).")
     }
   }
-  if (!is.null(logicd) & {
-    !is.numeric(logicd) | length(logicd) <= 1
-  }) {
-    stop("\"logicd\" must be a vector with length(logicd)>=2.")
+  if (npr.max == 0) {
+    logicd <- -Inf
   }
-  if (npr.max <= 0 | npr.max >= 1) {
-    stop("\"npr.max\" must belog to the interval (0,1). Tipically npr.max<=0.5.")
+  else if (npr.max < 0 | npr.max >= 1) {
+    stop("\"npr.max\" must belog to the interval [0,1). Tipically npr.max<=0.5.")
   }
   if (erc < 1) {
     stop("\"ecr\" must be larger or equal to 1.")
   }
-  if (iter.max < 2) {
-    stop("\"iter.max\" must be an integer larger or equal to 2.")
+  if (length(beta) > 1 | any(beta < 0)) {
+    stop("\"beta\" must be a non-negative number.")
+  }
+  if (iter.max < 1) {
+    stop("\"iter.max\" must be an integer larger or equal to 1.")
   }
   if (tol < 0) {
     stop("\"tol\" must be positive.")
@@ -59,6 +60,9 @@ otrimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc =
       stop("\"ncores\" must be an integer larger or equal to 1.")
     }
   }
+  if (!is.null(logicd) & !is.numeric(logicd)) {
+    stop("\"logicd\" must be  numeric vector, typically length(logicd) > 1.")
+  }
   if (!is.null(logicd)) {
     logicd <- sort(logicd)
   }
@@ -67,44 +71,71 @@ otrimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc =
       -10, by = 2.5), seq(-9, 0, by = 1))
   }
   nGrid <- length(logicd)
+  nn <- .CountUniqueRows(data)
+  if (all(logicd == -Inf)) {
+    if (nn <= G) {
+      cat("\n")
+      StopMsg <- paste0("There are m=", nn, " distinct data points in the data set. With logicd = -Inf, RIMLE existence requires m > G. Try to decrease 'G'.\n\n")
+      stop(StopMsg)
+    }
+  }
+  if (any(logicd > -Inf)) {
+    if (nn <= {
+      G + ceiling(nrow(data) * npr.max)
+    }) {
+      cat("\n")
+      StopMsg <- paste0("There are m = ", nn, " distinct data points in the data set. With  logicd > -Inf, RIMLE existence requires m > G + ceiling(nrow(data)*npr.max). Try to vary 'npr.max', 'logicd', and/or 'G'.\n\n")
+      stop(StopMsg)
+    }
+  }
   if (monitor) {
     message("\nOTRIMLE:")
   }
   if (is.null(initial)) {
     if (monitor) {
-      message("........computing initial clusters")
+      message("........computing the initial partition")
     }
     initial <- .Cluster2Assign(InitClust(data = data, G = G, knnd.trim = npr.max))
   }
   else {
+    if (monitor) {
+      message("........checking the initial partition")
+    }
     initial <- .Cluster2Assign(initial)
+    G <- ncol(initial) - 1
+    nj <- rep(0, times = G)
+    for (j in 1:G) {
+      nj[j] <- .CountUniqueRows(data[initial[, 1 + j] == 1, ])
+    }
+    if (any(nj < 2)) {
+      StopMsg <- paste("Some of the initial clusters contain less then 2 distinct points. Initial parameters cannot be computed. See details in help(InitClust) and try a different initial partition.\n\n", 
+        sep = "")
+      cat("\n")
+      stop(StopMsg)
+    }
   }
-  G <- ncol(initial) - 1
-  nj <- rep(0, times = G)
-  for (j in 1:G) {
-    nj[j] <- .CountUniqueRows(data[initial[, 1 + j] == 1, ])
-  }
-  if (any(nj < 2)) {
-    Suggest <- paste("initial = sample(0:", G, ",  size=", nrow(data), ", replace=TRUE)", 
-      sep = "")
-    StopMsg <- paste("\n\nSome of the initial clusters contain less then 2 distinct points. Initial parameters cannot be computed. Try a random initial partition setting: \n\n", 
-      Suggest, sep = "")
-    stop(StopMsg)
-  }
-  A <- data.frame(logicd = logicd, criterion = NA, iloglik = NA, npr = NA, code = NA, 
+  A <- data.frame(logicd = logicd, criterion = NA, iloglik = NA, enpr = NA, code = NA, 
     flag = NA, row.names = NULL, stringsAsFactors = FALSE)
   rownames(A) <- 1:nGrid
-  registerDoParallel(ncores)
   if (monitor) {
     message("........searching for the optimal log(icd)")
   }
-  B <- foreach(k = 1:nGrid) %dopar% {
-    .ECM(data = data, initial = initial, logicd = A[k, 1], npr.max = npr.max, 
-      erc = erc, iter.max = iter.max, tol = tol, grid.operation = TRUE)
+  if (ncores == 1) {
+    for (k in 1:nGrid) {
+      A[k, ] <- .ECM(data = data, initial = initial, logicd = A[k, 1], npr.max = npr.max, 
+        erc = erc, beta = beta, iter.max = iter.max, tol = tol, grid.operation = TRUE)
+    }
   }
-  stopImplicitCluster()
-  for (k in 1:nGrid) {
-    A[k, ] <- B[[k]]
+  if (ncores > 1) {
+    registerDoParallel(ncores)
+    B <- foreach(k = 1:nGrid) %dopar% {
+      .ECM(data = data, initial = initial, logicd = A[k, 1], npr.max = npr.max, 
+        erc = erc, beta = beta, iter.max = iter.max, tol = tol, grid.operation = TRUE)
+    }
+    stopImplicitCluster()
+    for (k in 1:nGrid) {
+      A[k, ] <- B[[k]]
+    }
   }
   if (all(is.na(A[, 2]))) {
     ans <- list()
@@ -114,15 +145,15 @@ otrimle <- function(data, G, initial = NULL, logicd = NULL, npr.max = 0.5, erc =
   else {
     x <- A[which.min(A[, 2]), 1]
     if (monitor) {
-      message("........computing the optimal solution\n")
+      message("........computing the optimal solution")
     }
     ans <- .ECM(data = data, initial = initial, logicd = x, npr.max = npr.max, 
-      erc = erc, iter.max = iter.max, tol = tol, grid.operation = FALSE)
+      erc = erc, beta = beta, iter.max = iter.max, tol = tol, grid.operation = FALSE)
     ans$optimization <- A
+    if (monitor) {
+      message("........done\n")
+    }
   }
   class(ans) <- "otrimle"
-  if (monitor) {
-    cat(print(ans))
-  }
   return(ans)
 }
