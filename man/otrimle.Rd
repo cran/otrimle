@@ -235,8 +235,9 @@ beta = 0, iter.max = 500, tol = 1e-06, ncores = NULL, monitor = TRUE)
   Coretto, P.  and C. Hennig (2016).
   Robust improper maximum likelihood: tuning, computation, and a comparison with
   other methods for robust Gaussian clustering.
-  \emph{Journal of the American Statistical Association}, Vol. 111(516), pp. 1648-1659.
-  \href{https://dx.doi.org/10.1080/01621459.2015.1100996}{doi: 10.1080/01621459.2015.1100996}
+  \emph{Journal of the American Statistical Association}, Vol. 111(516),
+  pp. 1648-1659. 
+  \doi{10.1080/01621459.2015.1100996}
 
   P. Coretto and C. Hennig (2017).
   Consistency, breakdown robustness, and algorithms for robust improper
@@ -247,6 +248,10 @@ beta = 0, iter.max = 500, tol = 1e-06, ncores = NULL, monitor = TRUE)
 
 
 
+\author{Pietro Coretto
+    \email{pcoretto@unisa.it}
+    \url{https://pietro-coretto.github.io}
+}
 
 
 

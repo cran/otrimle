@@ -1,3 +1,8 @@
+# 2021-05-28 :: otrimle v2.0
+* added 'otrimlesimg' and related functions that implement the methods for selecting
+  the number of clusters proposed in Hennig and Coretto (2021)
+
+
 # 2020-11-24 ::  otrimle v1.5 and v1.6
 * fixed multiple web links in documentation
 

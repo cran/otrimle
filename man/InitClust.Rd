@@ -91,6 +91,12 @@
    \href{https://jmlr.org/papers/v18/16-382.html}{https://jmlr.org/papers/v18/16-382.html}
  }
 
+ 
+\author{Pietro Coretto
+    \email{pcoretto@unisa.it}
+    \url{https://pietro-coretto.github.io}
+}
+
 
  \seealso{
    \link[mclust]{hc}
